@@ -36,6 +36,9 @@ const Index: React.FC = () => {
   const [inventory, setInventory] = useState<CaseItem[]>([]);
   const [user, setUser] = useState<User | null>(null);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const [isTopUpModalOpen, setIsTopUpModalOpen] = useState(false);
+  const [selectedTopUpAmount, setSelectedTopUpAmount] = useState<number | null>(null);
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string>('');
 
   const gameCases: GameCase[] = [
     {
@@ -117,6 +120,42 @@ const Index: React.FC = () => {
     setIsLoginModalOpen(false);
   };
 
+  const openTopUpModal = () => {
+    setIsTopUpModalOpen(true);
+    setSelectedTopUpAmount(null);
+    setSelectedPaymentMethod('');
+  };
+
+  const closeTopUpModal = () => {
+    setIsTopUpModalOpen(false);
+    setSelectedTopUpAmount(null);
+    setSelectedPaymentMethod('');
+  };
+
+  const handleTopUp = () => {
+    if (selectedTopUpAmount && selectedPaymentMethod) {
+      setBalance(prev => prev + selectedTopUpAmount);
+      closeTopUpModal();
+      // Здесь можно добавить уведомление об успешном пополнении
+    }
+  };
+
+  const topUpAmounts = [
+    { amount: 500, bonus: 0, popular: false },
+    { amount: 1000, bonus: 50, popular: false },
+    { amount: 2500, bonus: 150, popular: true },
+    { amount: 5000, bonus: 400, popular: false },
+    { amount: 10000, bonus: 1000, popular: false },
+    { amount: 25000, bonus: 3000, popular: false },
+  ];
+
+  const paymentMethods = [
+    { id: 'card', name: 'Банковская карта', icon: 'CreditCard', color: 'from-blue-500 to-blue-600' },
+    { id: 'qiwi', name: 'QIWI Кошелек', icon: 'Wallet', color: 'from-orange-500 to-orange-600' },
+    { id: 'yandex', name: 'ЮMoney', icon: 'Coins', color: 'from-yellow-500 to-yellow-600' },
+    { id: 'crypto', name: 'Криптовалюта', icon: 'Bitcoin', color: 'from-purple-500 to-purple-600' },
+  ];
+
   const renderHome = () => (
     <div className="min-h-screen bg-gaming-dark text-white">
       {/* Header */}
@@ -149,6 +188,14 @@ const Index: React.FC = () => {
                   <div className="flex items-center gap-2 bg-gaming-accent px-4 py-2 rounded-lg">
                     <Icon name="Coins" className="text-neon-yellow" size={20} />
                     <span className="font-semibold text-neon-yellow">{balance.toLocaleString()}</span>
+                    <Button
+                      onClick={openTopUpModal}
+                      size="sm"
+                      className="ml-2 bg-neon-green hover:bg-green-500 text-black font-semibold px-3 py-1 text-xs"
+                    >
+                      <Icon name="Plus" size={14} className="mr-1" />
+                      +
+                    </Button>
                   </div>
                   <div className="flex items-center gap-3 bg-gaming-accent px-4 py-2 rounded-lg">
                     <img 
@@ -425,6 +472,124 @@ const Index: React.FC = () => {
             
             <p className="text-xs text-gray-500 mt-4">
               Нажимая "Войти через Steam", вы соглашаетесь с правилами сервиса
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Top Up Modal */}
+      {isTopUpModalOpen && (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
+          <div className="bg-gaming-accent p-8 rounded-2xl text-center max-w-2xl w-full mx-4 border border-neon-yellow max-h-[90vh] overflow-y-auto">
+            <div className="mb-6">
+              <Icon name="Coins" size={64} className="text-neon-yellow mx-auto mb-4" />
+              <h3 className="text-3xl font-bold text-white mb-2">Пополнить баланс</h3>
+              <p className="text-gray-300">Выберите сумму и способ оплаты</p>
+            </div>
+            
+            {/* Amount Selection */}
+            <div className="mb-8">
+              <h4 className="text-xl font-semibold text-white mb-4">Сумма пополнения</h4>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                {topUpAmounts.map((item) => (
+                  <div
+                    key={item.amount}
+                    onClick={() => setSelectedTopUpAmount(item.amount)}
+                    className={`relative p-4 rounded-lg border-2 cursor-pointer transition-all ${
+                      selectedTopUpAmount === item.amount 
+                        ? 'border-neon-yellow bg-neon-yellow/10' 
+                        : 'border-gaming-purple hover:border-neon-cyan'
+                    } ${item.popular ? 'ring-2 ring-neon-pink' : ''}`}
+                  >
+                    {item.popular && (
+                      <div className="absolute -top-2 left-1/2 transform -translate-x-1/2">
+                        <Badge className="bg-neon-pink text-white text-xs">
+                          ПОПУЛЯРНОЕ
+                        </Badge>
+                      </div>
+                    )}
+                    <div className="text-white font-bold text-lg mb-1">
+                      {item.amount.toLocaleString()} ₽
+                    </div>
+                    {item.bonus > 0 && (
+                      <div className="text-neon-green text-sm font-semibold">
+                        +{item.bonus} бонус
+                      </div>
+                    )}
+                    <div className="text-gray-400 text-xs mt-1">
+                      = {(item.amount + item.bonus).toLocaleString()} монет
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Payment Methods */}
+            {selectedTopUpAmount && (
+              <div className="mb-8">
+                <h4 className="text-xl font-semibold text-white mb-4">Способ оплаты</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {paymentMethods.map((method) => (
+                    <div
+                      key={method.id}
+                      onClick={() => setSelectedPaymentMethod(method.id)}
+                      className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${
+                        selectedPaymentMethod === method.id 
+                          ? 'border-neon-cyan bg-neon-cyan/10' 
+                          : 'border-gaming-purple hover:border-neon-cyan'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className={`p-2 rounded-lg bg-gradient-to-r ${method.color}`}>
+                          <Icon name={method.icon as any} className="text-white" size={20} />
+                        </div>
+                        <span className="text-white font-semibold">{method.name}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Summary */}
+            {selectedTopUpAmount && selectedPaymentMethod && (
+              <div className="bg-gaming-darker p-4 rounded-lg mb-6">
+                <h5 className="text-white font-semibold mb-2">Итого к оплате:</h5>
+                <div className="flex justify-between items-center text-lg">
+                  <span className="text-gray-300">К доплате:</span>
+                  <span className="text-white font-bold">{selectedTopUpAmount.toLocaleString()} ₽</span>
+                </div>
+                <div className="flex justify-between items-center text-lg">
+                  <span className="text-gray-300">Получите:</span>
+                  <span className="text-neon-yellow font-bold">
+                    {(selectedTopUpAmount + (topUpAmounts.find(a => a.amount === selectedTopUpAmount)?.bonus || 0)).toLocaleString()} монет
+                  </span>
+                </div>
+              </div>
+            )}
+
+            {/* Actions */}
+            <div className="space-y-3">
+              <Button 
+                onClick={handleTopUp}
+                disabled={!selectedTopUpAmount || !selectedPaymentMethod}
+                className="w-full bg-neon-yellow text-black hover:bg-yellow-400 font-semibold py-3 text-lg disabled:opacity-50"
+              >
+                <Icon name="CreditCard" size={20} className="mr-3" />
+                Пополнить баланс
+              </Button>
+              
+              <Button 
+                onClick={closeTopUpModal}
+                variant="outline"
+                className="w-full border-gray-500 text-gray-300 hover:bg-gray-700"
+              >
+                Отмена
+              </Button>
+            </div>
+            
+            <p className="text-xs text-gray-500 mt-4">
+              Средства поступят на баланс моментально после оплаты
             </p>
           </div>
         </div>

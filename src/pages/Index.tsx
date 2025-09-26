@@ -301,7 +301,7 @@ const Index: React.FC = () => {
                   Отлично!
                 </Button>
               </>
-            )}
+            ) : null}
           </div>
         </div>
       )}

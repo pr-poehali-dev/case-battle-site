@@ -21,12 +21,21 @@ interface GameCase {
   items: CaseItem[];
 }
 
+interface User {
+  id: string;
+  username: string;
+  avatar: string;
+  steamId: string;
+}
+
 const Index: React.FC = () => {
   const [activeSection, setActiveSection] = useState('home');
   const [isOpening, setIsOpening] = useState(false);
   const [openedItem, setOpenedItem] = useState<CaseItem | null>(null);
   const [balance, setBalance] = useState(5000);
   const [inventory, setInventory] = useState<CaseItem[]>([]);
+  const [user, setUser] = useState<User | null>(null);
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
 
   const gameCases: GameCase[] = [
     {
@@ -81,6 +90,33 @@ const Index: React.FC = () => {
     setOpenedItem(null);
   };
 
+  const handleSteamLogin = () => {
+    // Имитация входа через Steam
+    const mockUser: User = {
+      id: '76561198123456789',
+      username: 'GamerPro2024',
+      avatar: 'img/3b9255d2-65a1-4c05-b0b5-517016187c4c.jpg',
+      steamId: '76561198123456789'
+    };
+    setUser(mockUser);
+    setIsLoginModalOpen(false);
+    setBalance(10000); // Бонус за регистрацию
+  };
+
+  const handleLogout = () => {
+    setUser(null);
+    setBalance(0);
+    setInventory([]);
+  };
+
+  const openLoginModal = () => {
+    setIsLoginModalOpen(true);
+  };
+
+  const closeLoginModal = () => {
+    setIsLoginModalOpen(false);
+  };
+
   const renderHome = () => (
     <div className="min-h-screen bg-gaming-dark text-white">
       {/* Header */}
@@ -108,14 +144,38 @@ const Index: React.FC = () => {
               ))}
             </nav>
             <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2 bg-gaming-accent px-4 py-2 rounded-lg">
-                <Icon name="Coins" className="text-neon-yellow" size={20} />
-                <span className="font-semibold text-neon-yellow">{balance.toLocaleString()}</span>
-              </div>
-              <Button variant="outline" className="border-neon-cyan text-neon-cyan hover:bg-neon-cyan hover:text-black">
-                <Icon name="User" size={16} className="mr-2" />
-                Профиль
-              </Button>
+              {user ? (
+                <>
+                  <div className="flex items-center gap-2 bg-gaming-accent px-4 py-2 rounded-lg">
+                    <Icon name="Coins" className="text-neon-yellow" size={20} />
+                    <span className="font-semibold text-neon-yellow">{balance.toLocaleString()}</span>
+                  </div>
+                  <div className="flex items-center gap-3 bg-gaming-accent px-4 py-2 rounded-lg">
+                    <img 
+                      src={user.avatar} 
+                      alt={user.username}
+                      className="w-8 h-8 rounded-full border-2 border-neon-cyan"
+                    />
+                    <span className="text-white font-medium">{user.username}</span>
+                  </div>
+                  <Button 
+                    variant="outline" 
+                    onClick={handleLogout}
+                    className="border-red-500 text-red-500 hover:bg-red-500 hover:text-white"
+                  >
+                    <Icon name="LogOut" size={16} className="mr-2" />
+                    Выйти
+                  </Button>
+                </>
+              ) : (
+                <Button 
+                  onClick={openLoginModal}
+                  className="bg-gaming-gradient hover:opacity-90 text-white font-semibold"
+                >
+                  <Icon name="User" size={16} className="mr-2" />
+                  Войти через Steam
+                </Button>
+              )}
             </div>
           </div>
         </div>
@@ -131,13 +191,24 @@ const Index: React.FC = () => {
           <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
             Испытайте удачу в самых эпических кейсах! Получите легендарные скины и редкие предметы.
           </p>
-          <Button 
-            size="lg" 
-            className="bg-gaming-gradient hover:opacity-90 text-white font-semibold px-8 py-4 text-lg animate-glow-pulse"
-          >
-            <Icon name="Play" size={24} className="mr-3" />
-            НАЧАТЬ ИГРУ
-          </Button>
+          {user ? (
+            <Button 
+              size="lg" 
+              className="bg-gaming-gradient hover:opacity-90 text-white font-semibold px-8 py-4 text-lg animate-glow-pulse"
+            >
+              <Icon name="Play" size={24} className="mr-3" />
+              НАЧАТЬ ИГРУ
+            </Button>
+          ) : (
+            <Button 
+              size="lg" 
+              onClick={openLoginModal}
+              className="bg-gaming-gradient hover:opacity-90 text-white font-semibold px-8 py-4 text-lg animate-glow-pulse"
+            >
+              <Icon name="LogIn" size={24} className="mr-3" />
+              ВОЙТИ ЧЕРЕЗ STEAM
+            </Button>
+          )}
         </div>
       </section>
 
@@ -179,12 +250,12 @@ const Index: React.FC = () => {
                     ))}
                   </div>
                   <Button 
-                    onClick={() => openCase(gameCase)}
-                    disabled={balance < gameCase.price}
-                    className="w-full bg-neon-cyan text-black hover:bg-cyan-400 font-semibold"
+                    onClick={() => user ? openCase(gameCase) : openLoginModal()}
+                    disabled={user && balance < gameCase.price}
+                    className="w-full bg-neon-cyan text-black hover:bg-cyan-400 font-semibold disabled:opacity-50"
                   >
                     <Icon name="Package" size={16} className="mr-2" />
-                    Открыть кейс
+                    {user ? 'Открыть кейс' : 'Войти для игры'}
                   </Button>
                 </CardContent>
               </Card>
@@ -302,6 +373,59 @@ const Index: React.FC = () => {
                 </Button>
               </>
             ) : null}
+          </div>
+        </div>
+      )}
+
+      {/* Steam Login Modal */}
+      {isLoginModalOpen && (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
+          <div className="bg-gaming-accent p-8 rounded-2xl text-center max-w-md w-full mx-4 border border-neon-cyan">
+            <div className="mb-6">
+              <Icon name="Gamepad2" size={64} className="text-neon-cyan mx-auto mb-4" />
+              <h3 className="text-3xl font-bold text-white mb-2">Добро пожаловать!</h3>
+              <p className="text-gray-300">Войдите через Steam, чтобы начать играть</p>
+            </div>
+            
+            <div className="space-y-4 mb-6">
+              <div className="bg-gaming-darker p-4 rounded-lg">
+                <div className="flex items-center gap-3 mb-2">
+                  <Icon name="Gift" className="text-neon-yellow" size={20} />
+                  <span className="text-white font-semibold">Бонус за регистрацию</span>
+                </div>
+                <p className="text-neon-yellow font-bold">10,000 монет</p>
+              </div>
+              
+              <div className="bg-gaming-darker p-4 rounded-lg">
+                <div className="flex items-center gap-3 mb-2">
+                  <Icon name="Shield" className="text-neon-green" size={20} />
+                  <span className="text-white font-semibold">Безопасность</span>
+                </div>
+                <p className="text-gray-400 text-sm">Быстрая и защищенная авторизация</p>
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <Button 
+                onClick={handleSteamLogin}
+                className="w-full bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white font-semibold py-3 text-lg"
+              >
+                <Icon name="Gamepad2" size={20} className="mr-3" />
+                Войти через Steam
+              </Button>
+              
+              <Button 
+                onClick={closeLoginModal}
+                variant="outline"
+                className="w-full border-gray-500 text-gray-300 hover:bg-gray-700"
+              >
+                Отмена
+              </Button>
+            </div>
+            
+            <p className="text-xs text-gray-500 mt-4">
+              Нажимая "Войти через Steam", вы соглашаетесь с правилами сервиса
+            </p>
           </div>
         </div>
       )}

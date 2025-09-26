@@ -39,29 +39,35 @@ const Index: React.FC = () => {
   const [isTopUpModalOpen, setIsTopUpModalOpen] = useState(false);
   const [selectedTopUpAmount, setSelectedTopUpAmount] = useState<number | null>(null);
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<string>('');
+  const [isRoulette, setIsRoulette] = useState(false);
+  const [rouletteItems, setRouletteItems] = useState<CaseItem[]>([]);
+  const [rouletteOffset, setRouletteOffset] = useState(0);
+
+  const csgoSkins: CaseItem[] = [
+    { id: '1', name: 'AWP | Dragon Lore', rarity: 'legendary', image: 'img/d54d6046-8931-4cfd-be35-2cf49fb83249.jpg', price: 12000 },
+    { id: '2', name: 'M4A4 | Howl', rarity: 'legendary', image: 'img/04af4777-7f88-4e61-a4e4-5607867873f3.jpg', price: 8500 },
+    { id: '3', name: 'Karambit | Fade', rarity: 'legendary', image: 'img/48c9f027-9dd1-40eb-b5fc-c15b67e3ce5d.jpg', price: 15000 },
+    { id: '4', name: 'AK-47 | Redline', rarity: 'epic', image: 'img/fa320a53-785c-4413-b50b-80357f9b8233.jpg', price: 450 },
+    { id: '5', name: 'Glock-18 | Water Elemental', rarity: 'rare', image: 'img/08c90ced-2d84-4b1d-90a5-3d8fba42e071.jpg', price: 180 },
+    { id: '6', name: 'P250 | Sand Dune', rarity: 'common', image: 'img/cb439648-65c8-4a61-bbc0-f6733a0abe3b.jpg', price: 25 },
+    { id: '7', name: 'Nova | Sand Dune', rarity: 'common', image: 'img/cb439648-65c8-4a61-bbc0-f6733a0abe3b.jpg', price: 15 },
+    { id: '8', name: 'FAMAS | Colony', rarity: 'common', image: 'img/cb439648-65c8-4a61-bbc0-f6733a0abe3b.jpg', price: 30 },
+  ];
 
   const gameCases: GameCase[] = [
     {
       id: '1',
-      name: 'Neon Strike Case',
+      name: 'Spectrum Case',
       price: 250,
-      image: 'img/3b9255d2-65a1-4c05-b0b5-517016187c4c.jpg',
-      items: [
-        { id: '1', name: 'Cyber Blade', rarity: 'legendary', image: 'img/7fae179e-7d4b-49e5-aeed-aa6335fd5a38.jpg', price: 2500 },
-        { id: '2', name: 'Plasma Rifle', rarity: 'epic', image: 'img/cb439648-65c8-4a61-bbc0-f6733a0abe3b.jpg', price: 800 },
-        { id: '3', name: 'Neon Glove', rarity: 'rare', image: 'img/3b9255d2-65a1-4c05-b0b5-517016187c4c.jpg', price: 150 },
-        { id: '4', name: 'Basic Skin', rarity: 'common', image: 'img/cb439648-65c8-4a61-bbc0-f6733a0abe3b.jpg', price: 50 }
-      ]
+      image: 'img/2a1c5d6d-dfc5-46ff-8aba-788990eed50a.jpg',
+      items: csgoSkins
     },
     {
       id: '2', 
-      name: 'Cyber Legends Case',
+      name: 'Gamma Case',
       price: 500,
-      image: 'img/3b9255d2-65a1-4c05-b0b5-517016187c4c.jpg',
-      items: [
-        { id: '5', name: 'Dragon Lore', rarity: 'legendary', image: 'img/7fae179e-7d4b-49e5-aeed-aa6335fd5a38.jpg', price: 5000 },
-        { id: '6', name: 'Lightning Strike', rarity: 'epic', image: 'img/cb439648-65c8-4a61-bbc0-f6733a0abe3b.jpg', price: 1200 }
-      ]
+      image: 'img/2a1c5d6d-dfc5-46ff-8aba-788990eed50a.jpg',
+      items: csgoSkins
     }
   ];
 
@@ -79,14 +85,42 @@ const Index: React.FC = () => {
     if (balance < gameCase.price) return;
     
     setIsOpening(true);
+    setIsRoulette(true);
     setBalance(prev => prev - gameCase.price);
     
+    // Создаем массив предметов для рулетки (50 предметов)
+    const rouletteItems = [];
+    for (let i = 0; i < 50; i++) {
+      // Распределение редкости: 70% common, 20% rare, 8% epic, 2% legendary
+      const random = Math.random();
+      let rarity: string;
+      if (random < 0.7) rarity = 'common';
+      else if (random < 0.9) rarity = 'rare';
+      else if (random < 0.98) rarity = 'epic';
+      else rarity = 'legendary';
+      
+      const filteredItems = gameCase.items.filter(item => item.rarity === rarity);
+      const randomItem = filteredItems[Math.floor(Math.random() * filteredItems.length)];
+      rouletteItems.push({...randomItem, id: `${randomItem.id}-${i}`});
+    }
+    
+    setRouletteItems(rouletteItems);
+    setRouletteOffset(0);
+    
+    // Анимация рулетки
     setTimeout(() => {
-      const randomItem = gameCase.items[Math.floor(Math.random() * gameCase.items.length)];
-      setOpenedItem(randomItem);
-      setInventory(prev => [...prev, randomItem]);
+      const finalPosition = -(45 * 120 - 300); // 45 элементов * 120px ширина - центр
+      setRouletteOffset(finalPosition);
+    }, 100);
+    
+    // Показываем результат
+    setTimeout(() => {
+      const wonItem = rouletteItems[45]; // Выигрышный предмет в центре
+      setOpenedItem(wonItem);
+      setInventory(prev => [...prev, wonItem]);
       setIsOpening(false);
-    }, 2000);
+      setIsRoulette(false);
+    }, 4000);
   };
 
   const closeModal = () => {
@@ -316,10 +350,10 @@ const Index: React.FC = () => {
         <div className="container mx-auto px-4">
           <h3 className="text-4xl font-bold text-center mb-12 text-glow">Топ предметы</h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {[
-              { name: 'Cyber Blade', price: 2500, rarity: 'legendary', image: 'img/7fae179e-7d4b-49e5-aeed-aa6335fd5a38.jpg' },
-              { name: 'Plasma Rifle', price: 800, rarity: 'epic', image: 'img/cb439648-65c8-4a61-bbc0-f6733a0abe3b.jpg' },
-              { name: 'Dragon Lore', price: 5000, rarity: 'legendary', image: 'img/7fae179e-7d4b-49e5-aeed-aa6335fd5a38.jpg' }
+            [
+              { name: 'AWP | Dragon Lore', price: 12000, rarity: 'legendary', image: 'img/d54d6046-8931-4cfd-be35-2cf49fb83249.jpg' },
+              { name: 'Karambit | Fade', price: 15000, rarity: 'legendary', image: 'img/48c9f027-9dd1-40eb-b5fc-c15b67e3ce5d.jpg' },
+              { name: 'M4A4 | Howl', price: 8500, rarity: 'legendary', image: 'img/04af4777-7f88-4e61-a4e4-5607867873f3.jpg' }
             ].map((item, index) => (
               <Card key={index} className="bg-gaming-accent border-gaming-purple group hover:border-neon-yellow transition-all duration-300">
                 <CardContent className="p-6">
@@ -389,9 +423,54 @@ const Index: React.FC = () => {
 
       {/* Case Opening Modal */}
       {(isOpening || openedItem) && (
-        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
-          <div className="bg-gaming-accent p-8 rounded-2xl text-center max-w-md w-full mx-4 border border-neon-pink">
-            {isOpening ? (
+        <div className="fixed inset-0 bg-black/90 flex items-center justify-center z-50">
+          <div className={`bg-gaming-accent rounded-2xl text-center border border-neon-pink ${
+            isRoulette ? 'p-4 max-w-4xl w-full mx-4' : 'p-8 max-w-md w-full mx-4'
+          }`}>
+            {isOpening && isRoulette ? (
+              <>
+                <h3 className="text-2xl font-bold text-white mb-6">Открываем кейс...</h3>
+                
+                {/* CS:GO Style Roulette */}
+                <div className="relative bg-gaming-darker rounded-lg p-4 mb-6 overflow-hidden">
+                  {/* Center line indicator */}
+                  <div className="absolute top-0 left-1/2 transform -translate-x-0.5 w-1 h-full bg-neon-yellow z-10"></div>
+                  <div className="absolute top-0 left-1/2 transform -translate-x-4 w-8 h-2 bg-neon-yellow z-10"></div>
+                  
+                  {/* Roulette items */}
+                  <div 
+                    className="flex transition-transform duration-[3.5s] ease-out"
+                    style={{ transform: `translateX(${rouletteOffset}px)` }}
+                  >
+                    {rouletteItems.map((item, index) => (
+                      <div key={index} className="flex-shrink-0 w-[120px] h-[140px] mx-1">
+                        <div className={`
+                          h-full border-2 rounded-lg p-2 flex flex-col items-center justify-center
+                          ${item.rarity === 'legendary' ? 'border-neon-yellow bg-yellow-500/10' : 
+                            item.rarity === 'epic' ? 'border-neon-purple bg-purple-500/10' :
+                            item.rarity === 'rare' ? 'border-neon-cyan bg-cyan-500/10' :
+                            'border-gray-500 bg-gray-500/10'}
+                        `}>
+                          <img 
+                            src={item.image} 
+                            alt={item.name}
+                            className="w-16 h-16 object-cover mb-2"
+                          />
+                          <div className="text-white text-xs font-bold text-center leading-tight">
+                            {item.name.split(' | ')[0]}
+                          </div>
+                          <div className="text-neon-yellow text-xs font-bold">
+                            {item.price}₽
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                
+                <div className="text-gray-300">Определяем выигрыш...</div>
+              </>
+            ) : isOpening ? (
               <>
                 <div className="animate-spin-case mb-6">
                   <Icon name="Package" size={80} className="text-neon-cyan mx-auto" />

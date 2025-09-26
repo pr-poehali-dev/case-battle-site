@@ -119,6 +119,10 @@ export default {
 					'0%, 100%': { transform: 'translateY(0px)' },
 					'50%': { transform: 'translateY(-10px)' },
 				},
+				'roulette-spin': {
+					'0%': { transform: 'translateX(0px)' },
+					'100%': { transform: 'translateX(-5400px)' },
+				},
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
@@ -127,6 +131,7 @@ export default {
 				'spin-case': 'spin-case 2s ease-in-out',
 				'glow-pulse': 'glow-pulse 2s ease-in-out infinite',
 				'float': 'float 3s ease-in-out infinite',
+				'roulette-spin': 'roulette-spin 3.5s cubic-bezier(0.17, 0.67, 0.12, 0.99)',
 			},
 			backgroundImage: {
 				'gaming-gradient': 'linear-gradient(135deg, #FF0080 0%, #8A2BE2 50%, #00FFFF 100%)',
